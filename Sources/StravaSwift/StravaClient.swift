@@ -141,7 +141,7 @@ extension StravaClient: ASWebAuthenticationPresentationContextProviding {
         }
     }
     #else
-    func authorize(result: @escaping AuthorizationHandler) {
+    public func authorize(result: @escaping AuthorizationHandler) {
         //openURL(url)
         // strava://oauth/mobile/authorize?response_type=code&approval_prompt=force&scope=activity:read_all&state=ios&client_id=14295&redirect_uri=stravaswift://www.edwin-buehler.net
         print("Router.webAuthorizationUrl \(Router.webAuthorizationUrl)")
