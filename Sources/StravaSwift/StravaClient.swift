@@ -85,12 +85,15 @@ extension StravaClient {
 
 extension StravaClient: ASWebAuthenticationPresentationContextProviding {
 
+    #if os(iOS)
     var currentWindow: UIWindow? { return UIApplication.shared.keyWindow }
     var currentViewController: UIViewController? { return currentWindow?.rootViewController }
-
+    #endif
+    
     /**
      Starts the Strava OAuth authorization. The authentication will use the Strava app be default if it is installed on the device. If the user does not have Strava installed, it will fallback on `SFAuthenticationSession` or `ASWebAuthenticationSession` depending on the iOS version used at runtime.
      */
+    #if os(iOS)
     public func authorize(result: @escaping AuthorizationHandler) {
         let appAuthorizationUrl = Router.appAuthorizationUrl
         if UIApplication.shared.canOpenURL(appAuthorizationUrl) {
@@ -137,7 +140,29 @@ extension StravaClient: ASWebAuthenticationPresentationContextProviding {
             }
         }
     }
-
+    #else
+    func authorize(result: @escaping AuthorizationHandler) {
+        //openURL(url)
+        // strava://oauth/mobile/authorize?response_type=code&approval_prompt=force&scope=activity:read_all&state=ios&client_id=14295&redirect_uri=stravaswift://www.edwin-buehler.net
+        print("Router.webAuthorizationUrl \(Router.webAuthorizationUrl)")
+        print(".config?.redirectUri \(config?.redirectUri)")
+        let webAuthenticationSession = ASWebAuthenticationSession(url: Router.webAuthorizationUrl,
+                                                                  callbackURLScheme: config?.redirectUri,
+                                                                  completionHandler: { (url, error) in
+            if let url = url, error == nil {
+                _ = self.handleAuthorizationRedirect(url, result: result)
+            } else {
+                result(.failure(error!))
+            }
+        })
+        authSession = webAuthenticationSession
+        if #available(iOS 13.0, *) {
+            webAuthenticationSession.presentationContextProvider = self
+        }
+        webAuthenticationSession.start()
+    }
+    #endif
+    
     /**
     Helper method to get the code from the redirection from Strava after the user has authorized the application (useful in AppDelegate)
 
@@ -217,10 +242,16 @@ extension StravaClient: ASWebAuthenticationPresentationContextProviding {
 
     // ASWebAuthenticationPresentationContextProviding
 
+    #if os(iOS)
     @available(iOS 12.0, *)
     public func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
         return currentWindow ?? ASPresentationAnchor()
     }
+    #else
+    public func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+        return ASPresentationAnchor()
+    }
+    #endif
 }
 
 
