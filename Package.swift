@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "StravaSwift",
     platforms: [
-        .macOS(.v10_15), .iOS(.v8)
+        .macOS(.v10_15), .iOS(.v10)
     ],
     products: [
         .library(name: "StravaSwift", targets: ["StravaSwift"]),
